@@ -21,10 +21,12 @@
 #define _XTAL_FREQ 740000   // 6.8k and 100pF
 
 void setup_port_b(void);
+void setup_TMR0_for_interrupts(void);
 void toggle_LEDs(void);
 
 void main(void) {
     setup_port_b();
+    setup_TMR0_for_interrupts();
 
     while (1) {
         toggle_LEDs();
@@ -43,12 +45,30 @@ void setup_port_b(void) {
     PORTB = 0;
     TRISB = 0;
     TRISB4 = 1;
+}
 
-    RB3 = 1;
+void setup_TMR0_for_interrupts(void) {
+    PSA = 1;    // 0: Assign prescaler to TMR0
+    PS2 = 0;
+    PS1 = 0;
+    PS0 = 0;
+    TMR0 = 128; // setup for 256 counts before triggering interrrupt.
+    T0CS = 1; // TMR0 counter select is set to start counting.
+    T0IE = 1; // enable TMR0 interrupt
+    ei(); // global interrupt enable
 }
 
 void toggle_LEDs(void) {
-    // Toggle RB2 and RB3.
+    // Toggle RB2
     RB2 = ~RB2;
-    RB3 = ~RB3;
+}
+
+void __interrupt() interrupt_service_routine(void) {
+    if (T0IE && T0IF) {
+        RB3 = ~RB3;
+        TMR0 = 128;
+        T0IF = 0; // clear TMR0 interrupt flag
+        T0IE = 1; // re-enable TMR0 interrupt
+    }
+
 }
