@@ -22,22 +22,35 @@
 
 void setup_port_b(void);
 void setup_TMR0_for_interrupts(void);
-void toggle_LEDs(void);
-const unsigned char t0_value = 250;
+void toggle_LED_a(void);
+void toggle_LED_b(void);
+
+const unsigned char tmr0_1ms_reload_val = 164; // 4T*2=10.88us = tick. 2:prescaler. (256-164)*tick = 1ms
+
+const unsigned int led_a_flash_period_ms = 2000;
+volatile unsigned int led_a_flash_task_ctr;
+
+const unsigned int led_b_flash_period_ms = 1000;
+volatile unsigned int led_b_flash_task_ctr;
 
 void main(void) {
     setup_port_b();
     setup_TMR0_for_interrupts();
 
     while (1) {
-        toggle_LEDs();
 
-        if (RB4 == 0) { // Speed up if button is pushed.
-            __delay_ms(150);
-            continue;
+        if (led_a_flash_task_ctr == 0) {
+            led_a_flash_task_ctr = led_a_flash_period_ms;
+            toggle_LED_a();
         }
-        __delay_ms(1000);
+        
+        if (led_b_flash_task_ctr == 0) {
+            led_b_flash_task_ctr = led_b_flash_period_ms;
+            toggle_LED_b();
+        }
+
     }
+    
     return;
 }
 
@@ -49,27 +62,32 @@ void setup_port_b(void) {
 }
 
 void setup_TMR0_for_interrupts(void) {
-    PSA = 1;    // 0: Assign prescaler to TMR0
-    PS2 = 0;
+    PSA = 0; // 0: Assign prescaler to TMR0
+    PS2 = 0; // 001: prescaler set to 2
     PS1 = 0;
-    PS0 = 0;
-    TMR0 = t0_value; // setup for 256 - x counts before triggering interrrupt.
-    T0CS = 1; // TMR0 counter select is set to start counting.
+    PS0 = 1;
+
+    TMR0 = tmr0_1ms_reload_val; // setup for 256 - x counts before triggering interrupt.
+    T0CS = 0; // 0: TMR0 counter source is internal clock
+    
     T0IE = 1; // enable TMR0 interrupt
     ei(); // global interrupt enable
 }
 
-void toggle_LEDs(void) {
-    // Toggle RB2
+void toggle_LED_a(void) {
+    RB3 = ~RB3;
+}
+void toggle_LED_b(void) {
     RB2 = ~RB2;
 }
 
 void __interrupt() interrupt_service_routine(void) {
     if (T0IE && T0IF) {
-        RB3 = ~RB3;
-        TMR0 = t0_value;
+        led_a_flash_task_ctr--;
+        led_b_flash_task_ctr--;
+        
+        TMR0 = tmr0_1ms_reload_val;
         T0IF = 0; // clear TMR0 interrupt flag
         T0IE = 1; // re-enable TMR0 interrupt
     }
-
 }
