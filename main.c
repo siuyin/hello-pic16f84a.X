@@ -20,14 +20,16 @@
 
 #define _XTAL_FREQ 740000   // 6.8k and 100pF
 
+void setup_port_b();
+void toggle_LEDs();
+
 void main(void) {
-    PORTB = 0;
-    TRISB = 0;
-    TRISB4 = 1;
-    RB3 = 1;
+    setup_port_b();
+
     while (1) {
-        RB2 = ~RB2;
-        RB3 = ~RB3;
+        toggle_LEDs();
+
+        // Speed up if button is pushed.
         if (RB4 == 0) {
             __delay_ms(150);
             continue;
@@ -35,4 +37,19 @@ void main(void) {
         __delay_ms(1000);
     }
     return;
+}
+
+void setup_port_b() {
+    // Set port b to output, except for RB4 which is a button input.
+    PORTB = 0;
+    TRISB = 0;
+    TRISB4 = 1;
+
+    RB3 = 1;
+}
+
+void toggle_LEDs() {
+    // Toggle RB2 and RB3.
+    RB2 = ~RB2;
+    RB3 = ~RB3;
 }
