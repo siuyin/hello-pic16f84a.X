@@ -23,6 +23,7 @@
 void setup_port_b(void);
 void setup_TMR0_for_interrupts(void);
 void toggle_LEDs(void);
+const unsigned char t0_value = 250;
 
 void main(void) {
     setup_port_b();
@@ -52,7 +53,7 @@ void setup_TMR0_for_interrupts(void) {
     PS2 = 0;
     PS1 = 0;
     PS0 = 0;
-    TMR0 = 128; // setup for 256 counts before triggering interrrupt.
+    TMR0 = t0_value; // setup for 256 - x counts before triggering interrrupt.
     T0CS = 1; // TMR0 counter select is set to start counting.
     T0IE = 1; // enable TMR0 interrupt
     ei(); // global interrupt enable
@@ -66,7 +67,7 @@ void toggle_LEDs(void) {
 void __interrupt() interrupt_service_routine(void) {
     if (T0IE && T0IF) {
         RB3 = ~RB3;
-        TMR0 = 128;
+        TMR0 = t0_value;
         T0IF = 0; // clear TMR0 interrupt flag
         T0IE = 1; // re-enable TMR0 interrupt
     }
