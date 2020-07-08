@@ -20,8 +20,8 @@
 
 #define _XTAL_FREQ 740000   // 6.8k and 100pF
 
-void setup_port_b();
-void toggle_LEDs();
+void setup_port_b(void);
+void toggle_LEDs(void);
 
 void main(void) {
     setup_port_b();
@@ -39,7 +39,7 @@ void main(void) {
     return;
 }
 
-void setup_port_b() {
+void setup_port_b(void) {
     // Set port b to output, except for RB4 which is a button input.
     PORTB = 0;
     TRISB = 0;
@@ -48,7 +48,7 @@ void setup_port_b() {
     RB3 = 1;
 }
 
-void toggle_LEDs() {
+void toggle_LEDs(void) {
     // Toggle RB2 and RB3.
     RB2 = ~RB2;
     RB3 = ~RB3;
