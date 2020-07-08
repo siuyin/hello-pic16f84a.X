@@ -19,12 +19,17 @@
 #define _XTAL_FREQ 740000   // 6.8k and 100pF
 
 void main(void) {
-    TRISB = 0;
     PORTB = 0;
+    TRISB = 0;
+    TRISB4 = 1;
     RB3 = 1;
     while (1) {
         RB2 = ~RB2;
         RB3 = ~RB3;
+        if (RB4 == 0) {
+            __delay_ms(150);
+            continue;
+        }
         __delay_ms(1000);
     }
     return;
