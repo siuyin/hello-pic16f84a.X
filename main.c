@@ -29,8 +29,7 @@ void main(void) {
     while (1) {
         toggle_LEDs();
 
-        // Speed up if button is pushed.
-        if (RB4 == 0) {
+        if (RB4 == 0) { // Speed up if button is pushed.
             __delay_ms(150);
             continue;
         }
