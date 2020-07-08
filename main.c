@@ -5,6 +5,8 @@
  * Created on 7 July, 2020, 9:32 PM
  */
 
+// README: The pull-up resistor on MCLR is absolutely required.
+
 // CONFIG
 #pragma config FOSC = EXTRC     // Oscillator Selection bits (RC oscillator)
 #pragma config WDTE = OFF       // Watchdog Timer (WDT disabled)
