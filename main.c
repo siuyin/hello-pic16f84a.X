@@ -33,10 +33,10 @@ volatile unsigned int led_b_flash_task_ctr;
 const unsigned char tmr0_reload_val = 248;
 volatile unsigned char tick; // system timer tick
 
-enum button_push_state {
-    bpON, bpOFF
+enum speed_toggle_state {
+    stON, stOFF
 };
-enum button_push_state button_state;
+enum speed_toggle_state speed_toggle;
 
 void __interrupt() interrupt_service_routine(void) {
     if (T0IE && T0IF) { // timer 0 interrupt enable and interrupt flag
@@ -63,6 +63,7 @@ void main(void) {
     setup_port_b();
     led_a_flash_task_ctr = led_a_flash_period_ticks;
     led_b_flash_task_ctr = led_b_flash_period_ticks;
+    speed_toggle = stOFF;
     setup_TMR0_for_interrupts();
     ei(); // global interrupt enable
 
@@ -108,7 +109,7 @@ void toggle_LED_a(void);
 
 void flash_LED_a_task(void) {
     if (led_a_flash_task_ctr == 0) {
-        if (button_state == bpON) {
+        if (speed_toggle == stON) {
             led_a_flash_task_ctr = led_a_flash_period_ticks / 5;
         } else {
             led_a_flash_task_ctr = led_a_flash_period_ticks;
@@ -134,11 +135,45 @@ void toggle_LED_b(void) {
     RB2 = ~RB2;
 }
 
+#define BTN RB4
+
+enum button_push_state {
+    bpPushed, bpReleased, bpMaybeReleased
+};
+enum button_push_state button_state;
+void toggle_speed(void);
+
 void check_button_push_to_change_LED_a_task_period(void) {
-    if (RB4 == 0) {
-        button_state = bpON;
+    switch (button_state) {
+        case bpReleased:
+            if (BTN == 0) {
+                button_state = bpPushed;
+                toggle_speed();
+
+            }
+            break;
+        case bpPushed:
+            if (BTN == 0) {
+                button_state = bpPushed;
+            } else {
+                button_state = bpMaybeReleased;
+            }
+            break;
+        case bpMaybeReleased:
+            if (BTN == 0) {
+                button_state = bpPushed;
+            } else {
+                button_state = bpReleased;
+            }
+            break;
+    }
+}
+
+void toggle_speed(void) {
+    if (speed_toggle == stOFF) {
+        speed_toggle = stON;
     } else {
-        button_state = bpOFF;
+        speed_toggle = stOFF;
     }
 }
 
