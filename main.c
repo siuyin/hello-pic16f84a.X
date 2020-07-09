@@ -24,7 +24,7 @@
 
 
 // Global variables used by interrupt service routine and main.
-unsigned int led_a_flash_period_ticks = 45;
+const unsigned int led_a_flash_period_ticks = 90;
 volatile unsigned int led_a_flash_task_ctr;
 
 const unsigned int led_b_flash_period_ticks = 90;
@@ -32,6 +32,11 @@ volatile unsigned int led_b_flash_task_ctr;
 
 const unsigned char tmr0_reload_val = 248;
 volatile unsigned char tick; // system timer tick
+
+enum button_push_state {
+    bpON, bpOFF
+};
+enum button_push_state button_state;
 
 void __interrupt() interrupt_service_routine(void) {
     if (T0IE && T0IF) { // timer 0 interrupt enable and interrupt flag
@@ -103,7 +108,11 @@ void toggle_LED_a(void);
 
 void flash_LED_a_task(void) {
     if (led_a_flash_task_ctr == 0) {
-        led_a_flash_task_ctr = led_a_flash_period_ticks;
+        if (button_state == bpON) {
+            led_a_flash_task_ctr = led_a_flash_period_ticks / 5;
+        } else {
+            led_a_flash_task_ctr = led_a_flash_period_ticks;
+        }
         toggle_LED_a();
     }
 }
@@ -127,12 +136,10 @@ void toggle_LED_b(void) {
 
 void check_button_push_to_change_LED_a_task_period(void) {
     if (RB4 == 0) {
-        led_a_flash_period_ticks = 90; // better to set a message var than to modify directly.
-        goto end;
+        button_state = bpON;
+    } else {
+        button_state = bpOFF;
     }
-    led_a_flash_period_ticks = 45;
-end:
-    NOP();
 }
 
 void wait_for_next_tick(unsigned char * current_tick) {
