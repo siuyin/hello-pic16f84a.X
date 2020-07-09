@@ -100,7 +100,7 @@ void setup_TMR0_for_interrupts(void) {
     // TMR0_t = prescaler * Tcyc
     // If R=6.8k and C=100pF, and prescaler = 256, each TMR0_t = 1.39 ms
     PSA = 0; // 0: Assign prescaler to TMR0
-    PS2 = 1; // 001: prescaler set to 2
+    PS2 = 1;
     PS1 = 1;
     PS0 = 1;
 
@@ -127,22 +127,21 @@ void led_a_speed_toggle_button_check_task(void) {
             if (BTN == 0) {
                 button_state = bpPushed;
                 toggle_speed();
-
             }
             break;
         case bpPushed:
             if (BTN == 0) {
                 button_state = bpPushed;
-            } else {
-                button_state = bpMaybeReleased;
+                break;
             }
+            button_state = bpMaybeReleased;
             break;
         case bpMaybeReleased:
             if (BTN == 0) {
                 button_state = bpPushed;
-            } else {
-                button_state = bpReleased;
+                break;
             }
+            button_state = bpReleased;
             break;
     }
 }
@@ -150,9 +149,9 @@ void led_a_speed_toggle_button_check_task(void) {
 void toggle_speed(void) {
     if (speed_toggle == stOFF) {
         speed_toggle = stON;
-    } else {
-        speed_toggle = stOFF;
+        return;
     }
+    speed_toggle = stOFF;
 }
 
 void toggle_LED_a(void);
