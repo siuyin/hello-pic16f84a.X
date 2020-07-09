@@ -22,15 +22,17 @@
 
 void setup_port_b(void);
 void setup_TMR0_for_interrupts(void);
+void flash_LED_a_task(void);
+void flash_LED_b_task(void);
 void toggle_LED_a(void);
 void toggle_LED_b(void);
 
 const unsigned char tmr0_1ms_reload_val = 164; // 4T*2=10.88us = tick. 2:prescaler. (256-164)*tick = 1ms
 
-const unsigned int led_a_flash_period_ms = 2000;
+const unsigned int led_a_flash_period_ms = 500;
 volatile unsigned int led_a_flash_task_ctr;
 
-const unsigned int led_b_flash_period_ms = 1000;
+const unsigned int led_b_flash_period_ms = 500;
 volatile unsigned int led_b_flash_task_ctr;
 
 void main(void) {
@@ -38,19 +40,10 @@ void main(void) {
     setup_TMR0_for_interrupts();
 
     while (1) {
-
-        if (led_a_flash_task_ctr == 0) {
-            led_a_flash_task_ctr = led_a_flash_period_ms;
-            toggle_LED_a();
-        }
-        
-        if (led_b_flash_task_ctr == 0) {
-            led_b_flash_task_ctr = led_b_flash_period_ms;
-            toggle_LED_b();
-        }
-
+        flash_LED_a_task();
+        flash_LED_b_task();
     }
-    
+
     return;
 }
 
@@ -69,14 +62,29 @@ void setup_TMR0_for_interrupts(void) {
 
     TMR0 = tmr0_1ms_reload_val; // setup for 256 - x counts before triggering interrupt.
     T0CS = 0; // 0: TMR0 counter source is internal clock
-    
+
     T0IE = 1; // enable TMR0 interrupt
     ei(); // global interrupt enable
+}
+
+void flash_LED_a_task(void) {
+    if (led_a_flash_task_ctr == 0) {
+        led_a_flash_task_ctr = led_a_flash_period_ms;
+        toggle_LED_a();
+    }
 }
 
 void toggle_LED_a(void) {
     RB3 = ~RB3;
 }
+
+void flash_LED_b_task(void) {
+    if (led_b_flash_task_ctr == 0) {
+        led_b_flash_task_ctr = led_b_flash_period_ms;
+        toggle_LED_b();
+    }
+}
+
 void toggle_LED_b(void) {
     RB2 = ~RB2;
 }
@@ -85,7 +93,7 @@ void __interrupt() interrupt_service_routine(void) {
     if (T0IE && T0IF) {
         led_a_flash_task_ctr--;
         led_b_flash_task_ctr--;
-        
+
         TMR0 = tmr0_1ms_reload_val;
         T0IF = 0; // clear TMR0 interrupt flag
         T0IE = 1; // re-enable TMR0 interrupt
