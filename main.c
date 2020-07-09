@@ -22,10 +22,12 @@
 // I swapped chips and the timing is mostly the same.
 // Accuracy is limited by RC values and not chip manufacturing tolerance.
 
-const unsigned int led_a_flash_period_ticks = 360;
+
+// Global variables used by interrupt service routine and main.
+const unsigned int led_a_flash_period_ticks = 45;
 volatile unsigned int led_a_flash_task_ctr;
 
-const unsigned int led_b_flash_period_ticks = 360;
+const unsigned int led_b_flash_period_ticks = 90;
 volatile unsigned int led_b_flash_task_ctr;
 
 const unsigned char tmr0_reload_val = 248;
@@ -43,6 +45,7 @@ void __interrupt() interrupt_service_routine(void) {
     }
 }
 
+// Local function declarations for main.
 void setup_port_b(void);
 void setup_TMR0_for_interrupts(void);
 void flash_LED_a_task(void);
