@@ -24,8 +24,7 @@ void setup_port_b(void);
 void setup_TMR0_for_interrupts(void);
 void flash_LED_a_task(void);
 void flash_LED_b_task(void);
-void toggle_LED_a(void);
-void toggle_LED_b(void);
+
 
 const unsigned char tmr0_1ms_reload_val = 164; // 4T*2=10.88us = tick. 2:prescaler. (256-164)*tick = 1ms
 
@@ -66,6 +65,9 @@ void setup_port_b(void) {
 }
 
 void setup_TMR0_for_interrupts(void) {
+    led_a_flash_task_ctr = led_a_flash_period_ms;
+    led_b_flash_task_ctr = led_b_flash_period_ms;
+
     PSA = 0; // 0: Assign prescaler to TMR0
     PS2 = 0; // 001: prescaler set to 2
     PS1 = 0;
@@ -77,6 +79,7 @@ void setup_TMR0_for_interrupts(void) {
     T0IE = 1; // enable TMR0 interrupt
     ei(); // global interrupt enable
 }
+void toggle_LED_a(void);
 
 void flash_LED_a_task(void) {
     if (led_a_flash_task_ctr == 0) {
@@ -88,6 +91,8 @@ void flash_LED_a_task(void) {
 void toggle_LED_a(void) {
     RB3 = ~RB3;
 }
+
+void toggle_LED_b(void);
 
 void flash_LED_b_task(void) {
     if (led_b_flash_task_ctr <= 1) {
