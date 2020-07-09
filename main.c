@@ -53,11 +53,10 @@ void flash_LED_b_task(void);
 void wait_for_next_tick(unsigned char *);
 
 void main(void) {
-    unsigned char current_tick = 0;
-
     setup_port_b();
     setup_TMR0_for_interrupts();
 
+    unsigned char current_tick = 0;
     while (1) {
         flash_LED_a_task();
         flash_LED_b_task();
