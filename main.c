@@ -18,32 +18,31 @@
 
 #include <xc.h>
 
-#define _XTAL_FREQ 740000   // 6.8k and 100pF
+#define _XTAL_FREQ 740000   // 6.8k and 100pF resitor is 10% and capacitor is 20% tolerance
 
-void setup_port_b(void);
-void setup_TMR0_for_interrupts(void);
-void flash_LED_a_task(void);
-void flash_LED_b_task(void);
-
-
-const unsigned char tmr0_1ms_reload_val = 164; // 4T*2=10.88us = tick. 2:prescaler. (256-164)*tick = 1ms
-
-const unsigned int led_a_flash_period_ms = 500;
+const unsigned int led_a_flash_period_ms = 5000;
 volatile unsigned int led_a_flash_task_ctr;
 
-const unsigned int led_b_flash_period_ms = 501;
+const unsigned int led_b_flash_period_ms = 5000;
 volatile unsigned int led_b_flash_task_ctr;
+
+const unsigned char tmr0_1ms_reload_val = 210; // 4T*2=10.88us = tick. 2:prescaler. (256-164)*tick = 1ms Tune accordingly.
 
 void __interrupt() interrupt_service_routine(void) {
     if (T0IE && T0IF) {
-        led_a_flash_task_ctr--;
-        led_b_flash_task_ctr--;
+        if (led_a_flash_task_ctr > 0) led_a_flash_task_ctr--;
+        if (led_b_flash_task_ctr > 0) led_b_flash_task_ctr--;
 
         TMR0 = tmr0_1ms_reload_val;
         T0IF = 0; // clear TMR0 interrupt flag
         T0IE = 1; // re-enable TMR0 interrupt
     }
 }
+
+void setup_port_b(void);
+void setup_TMR0_for_interrupts(void);
+void flash_LED_a_task(void);
+void flash_LED_b_task(void);
 
 void main(void) {
     setup_port_b();
@@ -79,6 +78,7 @@ void setup_TMR0_for_interrupts(void) {
     T0IE = 1; // enable TMR0 interrupt
     ei(); // global interrupt enable
 }
+
 void toggle_LED_a(void);
 
 void flash_LED_a_task(void) {
@@ -95,7 +95,7 @@ void toggle_LED_a(void) {
 void toggle_LED_b(void);
 
 void flash_LED_b_task(void) {
-    if (led_b_flash_task_ctr <= 1) {
+    if (led_b_flash_task_ctr == 0) {
         led_b_flash_task_ctr = led_b_flash_period_ms;
         toggle_LED_b();
     }
