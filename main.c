@@ -42,8 +42,6 @@ enum speed_toggle_state speed_toggle;
 
 void __interrupt() interrupt_service_routine(void) {
     if (T0IE && T0IF) { // timer 0 interrupt enable and interrupt flag
-        T0IF = 0; // clear TMR0 interrupt flag
-
         if (led_a_flash_task_ctr > 0) led_a_flash_task_ctr--;
         if (led_a_speed_toggle_button_check_ctr > 0) led_a_speed_toggle_button_check_ctr--;
         if (led_b_flash_task_ctr > 0) led_b_flash_task_ctr--;
@@ -51,6 +49,7 @@ void __interrupt() interrupt_service_routine(void) {
         tick++;
 
         TMR0 = tmr0_reload_val; // reload TMR0 for next tick
+        T0IF = 0; // clear TMR0 interrupt flag
     }
 }
 
