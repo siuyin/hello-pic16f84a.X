@@ -163,7 +163,7 @@ void flash_LED_a_task(void) {
     }
 
     if (speed_toggle == stON) {
-        led_a_flash_task_ctr = led_a_flash_period_ticks / 5;
+        led_a_flash_task_ctr = led_a_flash_period_ticks >> 3; // make it 8 time faster
     } else {
         led_a_flash_task_ctr = led_a_flash_period_ticks;
     }
