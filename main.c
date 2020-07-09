@@ -26,6 +26,8 @@
 // Global variables used by interrupt service routine and main.
 const unsigned int led_a_flash_period_ticks = 90;
 volatile unsigned int led_a_flash_task_ctr;
+const unsigned char led_a_speed_toggle_button_check_period_ticks = 2;
+volatile unsigned char led_a_speed_toggle_button_check_ctr;
 
 const unsigned int led_b_flash_period_ticks = 90;
 volatile unsigned int led_b_flash_task_ctr;
@@ -43,6 +45,7 @@ void __interrupt() interrupt_service_routine(void) {
         T0IF = 0; // clear TMR0 interrupt flag
 
         if (led_a_flash_task_ctr > 0) led_a_flash_task_ctr--;
+        if (led_a_speed_toggle_button_check_ctr >0) led_a_speed_toggle_button_check_ctr--;
         if (led_b_flash_task_ctr > 0) led_b_flash_task_ctr--;
 
         tick++;
@@ -56,12 +59,13 @@ void setup_port_b(void);
 void setup_TMR0_for_interrupts(void);
 void flash_LED_a_task(void);
 void flash_LED_b_task(void);
-void check_button_push_to_change_LED_a_task_period(void);
+void led_a_speed_toggle_button_check_task(void);
 void wait_for_next_tick(unsigned char *);
 
 void main(void) {
     setup_port_b();
     led_a_flash_task_ctr = led_a_flash_period_ticks;
+    led_a_speed_toggle_button_check_ctr = led_a_speed_toggle_button_check_period_ticks;
     led_b_flash_task_ctr = led_b_flash_period_ticks;
     speed_toggle = stOFF;
     setup_TMR0_for_interrupts();
@@ -71,7 +75,7 @@ void main(void) {
     while (1) {
         flash_LED_a_task();
         flash_LED_b_task();
-        check_button_push_to_change_LED_a_task_period();
+        led_a_speed_toggle_button_check_task();
 
         wait_for_next_tick(&current_tick);
     }
@@ -108,14 +112,16 @@ void setup_TMR0_for_interrupts(void) {
 void toggle_LED_a(void);
 
 void flash_LED_a_task(void) {
-    if (led_a_flash_task_ctr == 0) {
-        if (speed_toggle == stON) {
-            led_a_flash_task_ctr = led_a_flash_period_ticks / 5;
-        } else {
-            led_a_flash_task_ctr = led_a_flash_period_ticks;
-        }
-        toggle_LED_a();
+    if (led_a_flash_task_ctr != 0) {
+        return;
     }
+
+    if (speed_toggle == stON) {
+        led_a_flash_task_ctr = led_a_flash_period_ticks / 5;
+    } else {
+        led_a_flash_task_ctr = led_a_flash_period_ticks;
+    }
+    toggle_LED_a();
 }
 
 void toggle_LED_a(void) {
@@ -125,10 +131,11 @@ void toggle_LED_a(void) {
 void toggle_LED_b(void);
 
 void flash_LED_b_task(void) {
-    if (led_b_flash_task_ctr == 0) {
-        led_b_flash_task_ctr = led_b_flash_period_ticks;
-        toggle_LED_b();
+    if (led_b_flash_task_ctr != 0) {
+        return;
     }
+    led_b_flash_task_ctr = led_b_flash_period_ticks;
+    toggle_LED_b();
 }
 
 void toggle_LED_b(void) {
@@ -143,7 +150,10 @@ enum button_push_state {
 enum button_push_state button_state;
 void toggle_speed(void);
 
-void check_button_push_to_change_LED_a_task_period(void) {
+void led_a_speed_toggle_button_check_task(void) {
+    if (led_a_speed_toggle_button_check_ctr != 0){
+        return;
+    }
     switch (button_state) {
         case bpReleased:
             if (BTN == 0) {
