@@ -24,24 +24,25 @@
 
 
 // Global variables used by interrupt service routine and main.
-const unsigned int led_a_flash_period_ticks = 45;
+unsigned int led_a_flash_period_ticks = 45;
 volatile unsigned int led_a_flash_task_ctr;
 
 const unsigned int led_b_flash_period_ticks = 90;
 volatile unsigned int led_b_flash_task_ctr;
 
 const unsigned char tmr0_reload_val = 248;
-volatile unsigned char tick;
+volatile unsigned char tick; // system timer tick
 
 void __interrupt() interrupt_service_routine(void) {
-    if (T0IE && T0IF) {
+    if (T0IE && T0IF) { // timer 0 interrupt enable and interrupt flag
+        T0IF = 0; // clear TMR0 interrupt flag
+
         if (led_a_flash_task_ctr > 0) led_a_flash_task_ctr--;
         if (led_b_flash_task_ctr > 0) led_b_flash_task_ctr--;
+
         tick++;
 
-        TMR0 = tmr0_reload_val;
-        T0IF = 0; // clear TMR0 interrupt flag
-        T0IE = 1; // re-enable TMR0 interrupt
+        TMR0 = tmr0_reload_val; // reload TMR0 for next tick
     }
 }
 
@@ -50,16 +51,21 @@ void setup_port_b(void);
 void setup_TMR0_for_interrupts(void);
 void flash_LED_a_task(void);
 void flash_LED_b_task(void);
+void check_button_push_to_change_LED_a_task_period(void);
 void wait_for_next_tick(unsigned char *);
 
 void main(void) {
     setup_port_b();
+    led_a_flash_task_ctr = led_a_flash_period_ticks;
+    led_b_flash_task_ctr = led_b_flash_period_ticks;
     setup_TMR0_for_interrupts();
+    ei(); // global interrupt enable
 
     unsigned char current_tick = 0;
     while (1) {
         flash_LED_a_task();
         flash_LED_b_task();
+        check_button_push_to_change_LED_a_task_period();
 
         wait_for_next_tick(&current_tick);
     }
@@ -71,12 +77,10 @@ void setup_port_b(void) {
     // Set port b to output, except for RB4 which is a button input.
     PORTB = 0;
     TRISB = 0;
-    TRISB4 = 1;
+    TRISB4 = 1; // RB4 is an input
 }
 
 void setup_TMR0_for_interrupts(void) {
-    led_a_flash_task_ctr = led_a_flash_period_ticks;
-    led_b_flash_task_ctr = led_b_flash_period_ticks;
     tick = 0;
 
     // example:
@@ -93,7 +97,6 @@ void setup_TMR0_for_interrupts(void) {
     T0CS = 0; // 0: TMR0 counter source is internal clock
 
     T0IE = 1; // enable TMR0 interrupt
-    ei(); // global interrupt enable
 }
 
 void toggle_LED_a(void);
@@ -120,6 +123,16 @@ void flash_LED_b_task(void) {
 
 void toggle_LED_b(void) {
     RB2 = ~RB2;
+}
+
+void check_button_push_to_change_LED_a_task_period(void) {
+    if (RB4 == 0) {
+        led_a_flash_period_ticks = 90; // better to set a message var than to modify directly.
+        goto end;
+    }
+    led_a_flash_period_ticks = 45;
+end:
+    NOP();
 }
 
 void wait_for_next_tick(unsigned char * current_tick) {
