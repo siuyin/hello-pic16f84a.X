@@ -32,10 +32,7 @@ volatile unsigned char led_a_speed_toggle_button_check_ctr;
 const unsigned int led_b_flash_period_ticks = 90;
 volatile unsigned int led_b_flash_task_ctr;
 
-
 volatile unsigned char tick; // system timer tick is about 11ms
-
-
 
 // Local function declarations for main.
 void setup_port_b(void);
@@ -58,7 +55,6 @@ void main(void) {
         led_a_speed_toggle_button_check_task();
         flash_LED_a_task();
         flash_LED_b_task();
-
     }
 
     return;
@@ -103,14 +99,18 @@ enum button_push_state {
     bpPushed, bpReleased, bpMaybeReleased
 };
 enum button_push_state button_state;
+
 void toggle_speed(void);
 
 void led_a_speed_toggle_button_check_task(void) {
-    static unsigned char lda;
-    if (led_a_speed_toggle_button_check_ctr != 0 ||
-            lda == tick) {
+    static unsigned char lda; // lda: last done at
+
+    if (led_a_speed_toggle_button_check_ctr != 0 || lda == tick) {
         return;
     }
+
+    lda = tick;
+    led_a_speed_toggle_button_check_ctr = led_a_speed_toggle_button_check_period_ticks;
 
     switch (button_state) {
         case bpReleased:
@@ -134,9 +134,6 @@ void led_a_speed_toggle_button_check_task(void) {
             button_state = bpReleased;
             break;
     }
-
-    lda = tick;
-    led_a_speed_toggle_button_check_ctr = led_a_speed_toggle_button_check_period_ticks;
 }
 
 void toggle_speed(void) {
@@ -151,10 +148,12 @@ void toggle_LED_a(void);
 
 void flash_LED_a_task(void) {
     static unsigned char lda;
-    if (led_a_flash_task_ctr != 0 ||
-            lda == tick) {
+    if (led_a_flash_task_ctr != 0 || lda == tick) {
         return;
     }
+
+    lda = tick;
+    led_a_flash_task_ctr = led_a_flash_period_ticks;
 
     if (speed_toggle == stON) {
         led_a_flash_task_ctr = led_a_flash_period_ticks >> 3; // make it 8 time faster
@@ -163,8 +162,6 @@ void flash_LED_a_task(void) {
     }
     toggle_LED_a();
 
-    lda = tick;
-    led_a_flash_task_ctr = led_a_flash_period_ticks;
 }
 
 void toggle_LED_a(void) {
@@ -176,15 +173,14 @@ void toggle_LED_b(void);
 void flash_LED_b_task(void) {
     static unsigned char lda;
 
-    if (led_b_flash_task_ctr != 0 ||
-            lda == tick) {
+    if (led_b_flash_task_ctr != 0 || lda == tick) {
         return;
     }
-    led_b_flash_task_ctr = led_b_flash_period_ticks;
-    toggle_LED_b();
 
     lda = tick;
     led_b_flash_task_ctr = led_b_flash_period_ticks;
+
+    toggle_LED_b();
 }
 
 void toggle_LED_b(void) {
