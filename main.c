@@ -24,13 +24,9 @@
 
 
 // Global variables used by interrupt service routine and main.
-const unsigned int led_a_flash_period_ticks = 90;
-volatile unsigned int led_a_flash_task_ctr;
-const unsigned char led_a_speed_toggle_button_check_period_ticks = 2;
-volatile unsigned char led_a_speed_toggle_button_check_ctr;
-
-const unsigned int led_b_flash_period_ticks = 90;
-volatile unsigned int led_b_flash_task_ctr;
+volatile unsigned int led_a_flash_task_ctr = 0;
+volatile unsigned char led_a_speed_toggle_button_check_ctr = 0;
+volatile unsigned int led_b_flash_task_ctr = 0;
 
 volatile unsigned char tick; // system timer tick is about 11ms
 
@@ -44,10 +40,6 @@ void wait_for_next_tick(unsigned char *);
 
 void main(void) {
     setup_port_b();
-    led_a_flash_task_ctr = led_a_flash_period_ticks;
-    led_a_speed_toggle_button_check_ctr = led_a_speed_toggle_button_check_period_ticks;
-    led_b_flash_task_ctr = led_b_flash_period_ticks;
-    speed_toggle = stOFF;
     setup_TMR0_for_interrupts();
     ei(); // global interrupt enable
 
@@ -93,7 +85,7 @@ void setup_TMR0_for_interrupts(void) {
 enum speed_toggle_state {
     stON, stOFF
 };
-enum speed_toggle_state speed_toggle;
+enum speed_toggle_state speed_toggle = stOFF;
 
 enum button_push_state {
     bpPushed, bpReleased, bpMaybeReleased
@@ -104,13 +96,14 @@ void toggle_speed(void);
 
 void led_a_speed_toggle_button_check_task(void) {
     static unsigned char lda; // lda: last done at
+    const unsigned char t = 2;
 
     if (led_a_speed_toggle_button_check_ctr != 0 || lda == tick) {
         return;
     }
 
     lda = tick;
-    led_a_speed_toggle_button_check_ctr = led_a_speed_toggle_button_check_period_ticks;
+    led_a_speed_toggle_button_check_ctr = t;
 
     switch (button_state) {
         case bpReleased:
@@ -148,17 +141,18 @@ void toggle_LED_a(void);
 
 void flash_LED_a_task(void) {
     static unsigned char lda;
+    const unsigned int t = 90;
     if (led_a_flash_task_ctr != 0 || lda == tick) {
         return;
     }
 
     lda = tick;
-    led_a_flash_task_ctr = led_a_flash_period_ticks;
+    led_a_flash_task_ctr = t;
 
     if (speed_toggle == stON) {
-        led_a_flash_task_ctr = led_a_flash_period_ticks >> 3; // make it 8 time faster
+        led_a_flash_task_ctr = t >> 3; // make it 8 times faster
     } else {
-        led_a_flash_task_ctr = led_a_flash_period_ticks;
+        led_a_flash_task_ctr = t;
     }
     toggle_LED_a();
 
@@ -172,13 +166,14 @@ void toggle_LED_b(void);
 
 void flash_LED_b_task(void) {
     static unsigned char lda;
+    const unsigned int t = 90;
 
     if (led_b_flash_task_ctr != 0 || lda == tick) {
         return;
     }
 
     lda = tick;
-    led_b_flash_task_ctr = led_b_flash_period_ticks;
+    led_b_flash_task_ctr = t;
 
     toggle_LED_b();
 }
