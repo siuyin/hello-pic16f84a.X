@@ -33,9 +33,9 @@ volatile unsigned char tick; // system timer tick is about 11 ms
 // Local function declarations for main.
 void setup_port_b(void);
 void setup_TMR0_for_interrupts(void);
+void led_a_speed_toggle_button_check_task(void);
 void flash_LED_a_task(void);
 void flash_LED_b_task(void);
-void led_a_speed_toggle_button_check_task(void);
 
 void main(void) {
     setup_port_b();
@@ -58,6 +58,8 @@ void setup_port_b(void) {
     TRISB4 = 1; // RB4 is an input
 }
 
+
+
 const unsigned char tmr0_reload_val = 248;
 
 void setup_TMR0_for_interrupts(void) {
@@ -78,6 +80,8 @@ void setup_TMR0_for_interrupts(void) {
 
     T0IE = 1; // enable TMR0 interrupt
 }
+
+
 
 #define BTN RB4
 
@@ -136,6 +140,8 @@ void toggle_speed(void) {
     flash_LED_a_speed_toggle = stOFF;
 }
 
+
+
 void toggle_LED_a(void);
 
 void flash_LED_a_task(void) {
@@ -161,6 +167,8 @@ void toggle_LED_a(void) {
     RB3 = ~RB3;
 }
 
+
+
 void toggle_LED_b(void);
 
 void flash_LED_b_task(void) {
@@ -180,6 +188,10 @@ void flash_LED_b_task(void) {
 void toggle_LED_b(void) {
     RB2 = ~RB2;
 }
+
+
+
+// interrupt service routine
 
 void __interrupt() interrupt_service_routine(void) {
     if (T0IE && T0IF) { // timer 0 interrupt enable and interrupt flag
