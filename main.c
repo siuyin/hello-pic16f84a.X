@@ -28,7 +28,7 @@ volatile unsigned int led_a_flash_task_ctr = 0;
 volatile unsigned char led_a_speed_toggle_button_check_ctr = 0;
 volatile unsigned int led_b_flash_task_ctr = 0;
 
-volatile unsigned char tick; // system timer tick is about 11ms
+volatile unsigned char tick; // system timer tick is about 11 ms
 
 // Local function declarations for main.
 void setup_port_b(void);
@@ -84,12 +84,12 @@ void setup_TMR0_for_interrupts(void) {
 enum speed_toggle_state {
     stON, stOFF
 };
-enum speed_toggle_state speed_toggle = stOFF;
+enum speed_toggle_state flash_LED_a_speed_toggle = stOFF;
 
 enum button_push_state {
     bpPushed, bpReleased, bpMaybeReleased
 };
-enum button_push_state button_state;
+enum button_push_state state;
 
 void toggle_speed(void);
 
@@ -104,36 +104,36 @@ void led_a_speed_toggle_button_check_task(void) {
     lda = tick;
     led_a_speed_toggle_button_check_ctr = t;
 
-    switch (button_state) {
+    switch (state) {
         case bpReleased:
             if (BTN == 0) {
-                button_state = bpPushed;
+                state = bpPushed;
                 toggle_speed();
             }
             break;
         case bpPushed:
             if (BTN == 0) {
-                button_state = bpPushed;
+                state = bpPushed;
                 break;
             }
-            button_state = bpMaybeReleased;
+            state = bpMaybeReleased;
             break;
         case bpMaybeReleased:
             if (BTN == 0) {
-                button_state = bpPushed;
+                state = bpPushed;
                 break;
             }
-            button_state = bpReleased;
+            state = bpReleased;
             break;
     }
 }
 
 void toggle_speed(void) {
-    if (speed_toggle == stOFF) {
-        speed_toggle = stON;
+    if (flash_LED_a_speed_toggle == stOFF) {
+        flash_LED_a_speed_toggle = stON;
         return;
     }
-    speed_toggle = stOFF;
+    flash_LED_a_speed_toggle = stOFF;
 }
 
 void toggle_LED_a(void);
@@ -148,7 +148,7 @@ void flash_LED_a_task(void) {
     lda = tick;
     led_a_flash_task_ctr = t;
 
-    if (speed_toggle == stON) {
+    if (flash_LED_a_speed_toggle == stON) {
         led_a_flash_task_ctr = t >> 3; // make it 8 times faster
     } else {
         led_a_flash_task_ctr = t;
