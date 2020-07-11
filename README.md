@@ -14,7 +14,7 @@ Thus if TMR0 is loaded with a value of 248, it will overflow
 in 256-248 = 8 clock periods or 8 * 1.39 ms = 11.1 ms.
 This interrupt is the timing source of the system tick.
 
-# Main loop
+## Main loop
 The main loop comprises independently executing functions.
 Each function runs only at its scheduled time and _must not_
 block the main loop.
