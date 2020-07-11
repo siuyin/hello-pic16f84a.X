@@ -36,7 +36,6 @@ void setup_TMR0_for_interrupts(void);
 void flash_LED_a_task(void);
 void flash_LED_b_task(void);
 void led_a_speed_toggle_button_check_task(void);
-void wait_for_next_tick(unsigned char *);
 
 void main(void) {
     setup_port_b();
@@ -180,12 +179,6 @@ void flash_LED_b_task(void) {
 
 void toggle_LED_b(void) {
     RB2 = ~RB2;
-}
-
-void wait_for_next_tick(unsigned char * current_tick) {
-    while (*current_tick == tick) {
-    }
-    *current_tick = tick;
 }
 
 void __interrupt() interrupt_service_routine(void) {
