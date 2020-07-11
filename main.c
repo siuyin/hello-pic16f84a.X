@@ -40,19 +40,6 @@ enum speed_toggle_state {
 };
 enum speed_toggle_state speed_toggle;
 
-void __interrupt() interrupt_service_routine(void) {
-    if (T0IE && T0IF) { // timer 0 interrupt enable and interrupt flag
-        if (led_a_flash_task_ctr > 0) led_a_flash_task_ctr--;
-        if (led_a_speed_toggle_button_check_ctr > 0) led_a_speed_toggle_button_check_ctr--;
-        if (led_b_flash_task_ctr > 0) led_b_flash_task_ctr--;
-
-        tick++;
-
-        TMR0 = tmr0_reload_val; // reload TMR0 for next tick
-        T0IF = 0; // clear TMR0 interrupt flag
-    }
-}
-
 // Local function declarations for main.
 void setup_port_b(void);
 void setup_TMR0_for_interrupts(void);
@@ -190,4 +177,17 @@ void wait_for_next_tick(unsigned char * current_tick) {
     while (*current_tick == tick) {
     }
     *current_tick = tick;
+}
+
+void __interrupt() interrupt_service_routine(void) {
+    if (T0IE && T0IF) { // timer 0 interrupt enable and interrupt flag
+        if (led_a_flash_task_ctr > 0) led_a_flash_task_ctr--;
+        if (led_a_speed_toggle_button_check_ctr > 0) led_a_speed_toggle_button_check_ctr--;
+        if (led_b_flash_task_ctr > 0) led_b_flash_task_ctr--;
+
+        tick++;
+
+        TMR0 = tmr0_reload_val; // reload TMR0 for next tick
+        T0IF = 0; // clear TMR0 interrupt flag
+    }
 }
